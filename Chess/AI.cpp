@@ -5,6 +5,8 @@
 #include <map>
 #include <unordered_map>
 
+#include "Transposition.hpp"
+
 #define PAWN_VALUE		100
 #define KNIGHT_VALUE	300
 #define BISHOP_VALUE	330
@@ -169,24 +171,7 @@ bool minOrMax(Evaluation newValue, Evaluation currentBest, bool whiteTurn)
 	}
 }
 
-struct Transposition
-{
-	Evaluation eval;
-	int depth;
-
-	Transposition()
-	{
-
-	}
-
-	Transposition(Evaluation eval_, int depth_)
-	{
-		eval = eval_;
-		depth = depth_;
-	}
-};
-
-std::unordered_map<Hash, Transposition> transpositionTable;
+TranspositionTable transpositionTable;
 
 Evaluation evaluatePositionNode(GameState state, int lookahead, int alpha, int beta)
 {
@@ -194,18 +179,18 @@ Evaluation evaluatePositionNode(GameState state, int lookahead, int alpha, int b
 
 	int realLookahead = lookahead;
 
-	if (transpositionTable.count(hash)) {
-		Transposition transposition = transpositionTable[hash];
+	if (transpositionTable.contains(hash)) {
+		TranspositionEntry transposition = transpositionTable.get(hash);
 
 		if (transposition.depth >= lookahead) {
 			++transpositionsUsed;
-			return transposition.eval;
+			return transposition.evaluation;
 		}
 	}
 
 	if (lookahead == 0) {
 		Evaluation eval = evaluatePosition(state);
-		transpositionTable[hash] = Transposition(eval, 0);
+		transpositionTable.set(hash, eval, 0);
 		return eval;
 	}
 
@@ -227,7 +212,7 @@ Evaluation evaluatePositionNode(GameState state, int lookahead, int alpha, int b
 		if (beta <= alpha) break;
 	}
 
-	transpositionTable[hash] = Transposition(bestEval, realLookahead);
+	transpositionTable.set(hash, bestEval, realLookahead);
 
 	return bestEval;
 }

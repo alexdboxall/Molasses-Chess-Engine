@@ -4,6 +4,7 @@
 #include <atomic>
 #include <thread>
 #include <cmath>
+#include <cassert>
 
 #include "Engine.hpp"
 #include "UI.hpp"
@@ -78,7 +79,7 @@ void aiThreadFunc(GameState* state)
 	int depth = 3;
 	do {
 		bestMove = treeAI(*state, depth++);
-	} while ((clock() - t) / CLOCKS_PER_SEC < 2);
+	} while ((clock() - t) / CLOCKS_PER_SEC < 3);
 
 	state->makeMove(bestMove);
 
@@ -90,6 +91,9 @@ void aiThreadFunc(GameState* state)
 	aiThreadRunning = false;
 }
 
+int whiteMilliseconds = 15 * 60 * 1000 + 999;
+int blackMilliseconds = 15 * 60 * 1000 + 999;
+
 int main(int argc, char** argv)
 {
 	engineInit();
@@ -97,7 +101,31 @@ int main(int argc, char** argv)
 	GameState state;
 	UI* ui = UIInit();
 	
+	clock_t previousClock = 0;
+	clock_t clocksPlayed = 0;
+	bool firstMovePlayed = false;
+
+	assert(CLOCKS_PER_SEC >= 50);
+
 	while (true) {
+		if (firstMovePlayed) {
+			clock_t currentClock = clock();
+			if (previousClock == 0) previousClock = currentClock;
+			clocksPlayed += currentClock - previousClock;
+			previousClock = currentClock;
+
+
+			while (clocksPlayed > CLOCKS_PER_SEC / 50) {
+				clocksPlayed -= CLOCKS_PER_SEC / 50;
+
+				if (state.whiteTurn) {
+					whiteMilliseconds -= 20;
+				} else {
+					blackMilliseconds -= 20;
+				}
+			}
+		}
+		
 		UICheckEvent(ui);
 
 		if (userInputMode) {
@@ -140,6 +168,7 @@ int main(int argc, char** argv)
 							}
 
 							userInputMode = false;
+							firstMovePlayed = true;
 
 							handleEscapeKey();
 							break;
@@ -151,6 +180,8 @@ int main(int argc, char** argv)
 
 			}
 		} else {
+			firstMovePlayed = true;
+			
 			if (!aiThreadRunning) {
 				aiThreadRunning = true;
 				aiThread = new std::thread(aiThreadFunc, &state);
@@ -208,7 +239,6 @@ int main(int argc, char** argv)
 			}
 		}
 
-
 		double trueEval = (double) overallEvaluation / 100.0;
 		double eval = trueEval;
 		if (eval < -600) eval = -25;
@@ -227,12 +257,24 @@ int main(int argc, char** argv)
 
 		char evalString[16];
 		sprintf(evalString, "%+.1f", trueEval);
+		if (abs(trueEval) > 600) {
+			strcpy(evalString, "MATE");
+		}
+		UIDrawText(ui, evalBarX + barWidth / 2, WINDOW_HEIGHT * 3 / 4 + 15, evalString, 0xFFFFFF, 20, true);
+
+		int whiteSeconds = whiteMilliseconds / 1000;
+		int blackSeconds = blackMilliseconds / 1000;
+
+		char whiteTimeStr[32];
+		char blackTimeStr[32];
+		sprintf(whiteTimeStr, "%d:%02d", whiteSeconds / 60, whiteSeconds % 60);
+		sprintf(blackTimeStr, "%d:%02d", blackSeconds / 60, blackSeconds % 60);
+		UIDrawText(ui, WINDOW_WIDTH - xMargin + 20, yMargin, blackTimeStr, 0xFFFFFF, 20, false);
+		UIDrawText(ui, WINDOW_WIDTH - xMargin + 20, WINDOW_HEIGHT - yMargin - 20, whiteTimeStr, 0xFFFFFF, 20, false);
+
 
 		UIDrawRect(ui, evalBarX, evalBarY, barWidth, WINDOW_HEIGHT / 2, 0);
 		UIDrawRect(ui, evalBarX, evalBarY + distance, barWidth, WINDOW_HEIGHT / 2 - distance, 0xFFFFFF);
-
-		UIDrawText(ui, evalBarX + barWidth / 2, WINDOW_HEIGHT * 3 / 4 + 15, evalString, 0xFFFFFF, 20, true);
-
 		UIDrawMessage(ui, (WINDOW_WIDTH - 350) / 2, (yMargin - 50) / 2, currentMessage);
 		UIPresent(ui);
 	}

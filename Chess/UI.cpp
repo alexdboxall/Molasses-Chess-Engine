@@ -202,7 +202,9 @@ void UIDrawText(UI* ui, int x, int y, const char* text, uint32_t col, int size, 
 	rect.w = textSurface->w;
 	rect.h = textSurface->h;
 
-	rect.x -= rect.w / 2;
+	if (centered) {
+		rect.x -= rect.w / 2;
+	}
 
 	SDL_RenderCopy(ui->renderer, mTexture, NULL, &rect);
 	SDL_FreeSurface(textSurface);
