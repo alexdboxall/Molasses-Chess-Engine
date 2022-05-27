@@ -203,25 +203,35 @@ int main(int argc, char** argv)
 					pieceChar = (x + y) & 1 ? 'z' : 'Z';
 				}
 				
+				if (!userInputMode) highlight = 0;
 				UIDrawPiece(ui, x * SQUARE_SIZE + xMargin, (7 - y) * SQUARE_SIZE + yMargin, pieceChar, highlight, !((x + y) & 1));
 			}
 		}
 
 
-		double eval = (double) overallEvaluation / 100.0;
+		double trueEval = (double) overallEvaluation / 100.0;
+		double eval = trueEval;
 		if (eval < -600) eval = -25;
 		else if (eval < -23) eval = -23;
 		else if (eval > 600) eval = 25;
 		else if (eval > 23) eval = 23;
 
-		double evalBarX = (xMargin - 40) / 2;
+		int barWidth = 40;
+
+		double evalBarX = (xMargin - barWidth) / 2;
 		double evalBarY = WINDOW_HEIGHT / 4;
-		double blackEvalFraction = (sqrt(abs(eval)) + 5) / 10.0;
+		double midVal = sqrt(abs(eval));
+		double blackEvalFraction = (eval < 0 ? 5 + midVal : 5 - midVal) / 10.0;
 
 		int distance = blackEvalFraction * WINDOW_HEIGHT / 2;
 
-		UIDrawRect(ui, evalBarX, evalBarY, 40, WINDOW_HEIGHT / 2, 0);
-		UIDrawRect(ui, evalBarX, evalBarY + distance, 40, WINDOW_HEIGHT / 2 - distance, 0xFFFFFF);
+		char evalString[16];
+		sprintf(evalString, "%+.1f", trueEval);
+
+		UIDrawRect(ui, evalBarX, evalBarY, barWidth, WINDOW_HEIGHT / 2, 0);
+		UIDrawRect(ui, evalBarX, evalBarY + distance, barWidth, WINDOW_HEIGHT / 2 - distance, 0xFFFFFF);
+
+		UIDrawText(ui, evalBarX + barWidth / 2, WINDOW_HEIGHT * 3 / 4 + 15, evalString, 0xFFFFFF, 20, true);
 
 		UIDrawMessage(ui, (WINDOW_WIDTH - 350) / 2, (yMargin - 50) / 2, currentMessage);
 		UIPresent(ui);

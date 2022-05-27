@@ -5,6 +5,8 @@
 #include <cstdio>
 #include <cstring>
 
+#define ROOT_FILEPATH "../"
+
 UI* UIInit()
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -16,26 +18,28 @@ UI* UIInit()
 	SDL_Surface* screenSurface = SDL_GetWindowSurface(window);
 
 	IMG_Init(IMG_INIT_PNG);
+	TTF_Init();
+
+
 
 	UI* ui = new UI();
 	ui->window = window;
 	ui->screenSurface = screenSurface;
 	ui->renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
-	
-	ui->pawnIcon[0] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load("C:/Users/Alex/source/repos/Chess/icons/wp.png"));
-	ui->pawnIcon[1] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load("C:/Users/Alex/source/repos/Chess/icons/bp.png"));
-	ui->knightIcon[0] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load("C:/Users/Alex/source/repos/Chess/icons/wn.png"));
-	ui->knightIcon[1] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load("C:/Users/Alex/source/repos/Chess/icons/bn.png"));
-	ui->bishopIcon[0] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load("C:/Users/Alex/source/repos/Chess/icons/wb.png"));
-	ui->bishopIcon[1] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load("C:/Users/Alex/source/repos/Chess/icons/bb.png"));
-	ui->rookIcon[0] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load("C:/Users/Alex/source/repos/Chess/icons/wr.png"));
-	ui->rookIcon[1] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load("C:/Users/Alex/source/repos/Chess/icons/br.png"));
-	ui->queenIcon[0] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load("C:/Users/Alex/source/repos/Chess/icons/wq.png"));
-	ui->queenIcon[1] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load("C:/Users/Alex/source/repos/Chess/icons/bq.png"));
-	ui->kingIcon[0] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load("C:/Users/Alex/source/repos/Chess/icons/wk.png"));
-	ui->kingIcon[1] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load("C:/Users/Alex/source/repos/Chess/icons/bk.png"));
-	ui->squareIcon[0] = SDL_CreateTextureFromSurface(ui->renderer, SDL_LoadBMP("C:/Users/Alex/source/repos/Chess/icons/w.bmp"));
-	ui->squareIcon[1] = SDL_CreateTextureFromSurface(ui->renderer, SDL_LoadBMP("C:/Users/Alex/source/repos/Chess/icons/b.bmp"));
+	ui->pawnIcon[0] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load(ROOT_FILEPATH "icons/wp.png"));
+	ui->pawnIcon[1] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load(ROOT_FILEPATH "icons/bp.png"));
+	ui->knightIcon[0] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load(ROOT_FILEPATH "icons/wn.png"));
+	ui->knightIcon[1] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load(ROOT_FILEPATH "icons/bn.png"));
+	ui->bishopIcon[0] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load(ROOT_FILEPATH "icons/wb.png"));
+	ui->bishopIcon[1] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load(ROOT_FILEPATH "icons/bb.png"));
+	ui->rookIcon[0] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load(ROOT_FILEPATH "icons/wr.png"));
+	ui->rookIcon[1] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load(ROOT_FILEPATH "icons/br.png"));
+	ui->queenIcon[0] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load(ROOT_FILEPATH "icons/wq.png"));
+	ui->queenIcon[1] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load(ROOT_FILEPATH "icons/bq.png"));
+	ui->kingIcon[0] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load(ROOT_FILEPATH "icons/wk.png"));
+	ui->kingIcon[1] = SDL_CreateTextureFromSurface(ui->renderer, IMG_Load(ROOT_FILEPATH "icons/bk.png"));
+	ui->squareIcon[0] = SDL_CreateTextureFromSurface(ui->renderer, SDL_LoadBMP(ROOT_FILEPATH "icons/w.bmp"));
+	ui->squareIcon[1] = SDL_CreateTextureFromSurface(ui->renderer, SDL_LoadBMP(ROOT_FILEPATH "icons/b.bmp"));
 
 	return ui;
 }
@@ -67,43 +71,43 @@ void UIDrawMessage(UI* ui, int x, int y, UIMessage msg) {
 	case UIMessage::None:
 		return;
 	case UIMessage::DisplayDraw50:
-		strcpy(filepath, "C:/Users/Alex/source/repos/Chess/icons/50draw.bmp");
+		strcpy(filepath, "icons/50draw.bmp");
 		break;
 	case UIMessage::DisplayDraw75:
-		strcpy(filepath, "C:/Users/Alex/source/repos/Chess/icons/75draw.bmp");
+		strcpy(filepath, "icons/75draw.bmp");
 		break;
 	case UIMessage::DisplayDrawAgree:
-		strcpy(filepath, "C:/Users/Alex/source/repos/Chess/icons/agreedraw.bmp");
+		strcpy(filepath, "icons/agreedraw.bmp");
 		break;
 	case UIMessage::DisplayDrawDeadPosition:
-		strcpy(filepath, "C:/Users/Alex/source/repos/Chess/icons/deaddraw.bmp");
+		strcpy(filepath, "icons/deaddraw.bmp");
 		break;
 	case UIMessage::DisplayDrawRepetition:
-		strcpy(filepath, "C:/Users/Alex/source/repos/Chess/icons/repetitiondraw.bmp");
+		strcpy(filepath, "icons/repetitiondraw.bmp");
 		break;
 	case UIMessage::DisplayDrawStalemate:
-		strcpy(filepath, "C:/Users/Alex/source/repos/Chess/icons/stalemate.bmp");
+		strcpy(filepath, "icons/stalemate.bmp");
 		break;
 	case UIMessage::DisplayDrawTime:
-		strcpy(filepath, "C:/Users/Alex/source/repos/Chess/icons/timedraw.bmp");
+		strcpy(filepath, "icons/timedraw.bmp");
 		break;
 	case UIMessage::DisplayWinBlack:
-		strcpy(filepath, "C:/Users/Alex/source/repos/Chess/icons/blackwin.bmp");
+		strcpy(filepath, "icons/blackwin.bmp");
 		break;
 	case UIMessage::DisplayWinBlackResign:
-		strcpy(filepath, "C:/Users/Alex/source/repos/Chess/icons/blackwinresgn.bmp");
+		strcpy(filepath, "icons/blackwinresgn.bmp");
 		break;
 	case UIMessage::DisplayWinBlackTime:
-		strcpy(filepath, "C:/Users/Alex/source/repos/Chess/icons/blackwintime.bmp");
+		strcpy(filepath, "icons/blackwintime.bmp");
 		break;
 	case UIMessage::DisplayWinWhite:
-		strcpy(filepath, "C:/Users/Alex/source/repos/Chess/icons/whitewin.bmp");
+		strcpy(filepath, "icons/whitewin.bmp");
 		break;
 	case UIMessage::DisplayWinWhiteResign:
-		strcpy(filepath, "C:/Users/Alex/source/repos/Chess/icons/whitewinresgn.bmp");
+		strcpy(filepath, "icons/whitewinresgn.bmp");
 		break;
 	case UIMessage::DisplayWinWhiteTime:
-		strcpy(filepath, "C:/Users/Alex/source/repos/Chess/icons/whitewintime.bmp");
+		strcpy(filepath, "icons/whitewintime.bmp");
 		break;
 	default:
 		assert(false);
@@ -180,9 +184,30 @@ void UIDrawPiece(UI* ui, int x, int y, char piece, int highlight, bool blackSqua
 	SDL_SetRenderDrawColor(ui->renderer, 0, 0, 0, 255);
 }
 
-void UIDrawText(UI* ui, int x, int y, char* text, uint32_t col)
+void UIDrawText(UI* ui, int x, int y, const char* text, uint32_t col, int size, bool centered)
 {
+	SDL_Color colour;
+	colour.r = (col >> 16) & 0xFF;
+	colour.g = (col >> 8) & 0xFF;
+	colour.b = (col >> 0) & 0xFF;
+	colour.a = 0xFF;
 
+	TTF_Font* ttfFont = TTF_OpenFont(ROOT_FILEPATH "font/Inter-Regular.ttf", size);
+	SDL_Surface* textSurface = TTF_RenderText_Blended(ttfFont, text, colour);
+	SDL_Texture* mTexture = SDL_CreateTextureFromSurface(ui->renderer, textSurface);
+
+	SDL_Rect rect;
+	rect.x = x;
+	rect.y = y;
+	rect.w = textSurface->w;
+	rect.h = textSurface->h;
+
+	rect.x -= rect.w / 2;
+
+	SDL_RenderCopy(ui->renderer, mTexture, NULL, &rect);
+	SDL_FreeSurface(textSurface);
+	SDL_DestroyTexture(mTexture);
+	TTF_CloseFont(ttfFont);
 }
 
 void UICheckEvent(UI* ui)

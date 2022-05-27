@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <SDL.h>
+#include <SDL_ttf.h>
 
 #define WINDOW_WIDTH	1000
 #define WINDOW_HEIGHT	750
@@ -47,7 +48,7 @@ void UIPresent(UI* ui);
 void UIDrawMessage(UI* ui, int x, int y, UIMessage msg);
 void UIDrawRect(UI* ui, int x, int y, int w, int h, uint32_t col);
 void UIDrawPiece(UI* ui, int x, int y, char piece, int highlight, bool blackSquare);
-void UIDrawText(UI* ui, int x, int y, char* text, uint32_t col);
+void UIDrawText(UI* ui, int x, int y, const char* text, uint32_t col, int size, bool centered);
 void UICheckEvent(UI* ui);
 void UIExit(UI* ui);
 
