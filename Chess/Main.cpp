@@ -3,6 +3,7 @@
 #include <iostream>
 #include <atomic>
 #include <thread>
+#include <chrono>
 #include <cmath>
 #include <cassert>
 
@@ -67,27 +68,33 @@ bool userInputMode = true;
 std::atomic<bool> aiThreadRunning(false);
 std::thread* aiThread = nullptr;
 
+void aiDelayThread()
+{
+	std::chrono::milliseconds timespan(1000 * 45);
+	std::this_thread::sleep_for(timespan);
+	stopAI = true;
+}
+
 void aiThreadFunc(GameState* state)
 {
-	double eval = evaluatePosition(*state);
-	eval /= 100;
-
-	printf("%+.1f\n", eval);
-
 	Move bestMove;
 	time_t t = clock();
 	int depth = 3;
-	do {
-		bestMove = treeAI(*state, depth++);
-	} while ((clock() - t) / CLOCKS_PER_SEC < 3);
+
+	Move m = treeAI(*state, depth++, true);
+	bestMove = m;
+
+	while (!stopAI) {
+		bestMove = m;
+		m = treeAI(*state, depth++, false);
+	}
+
+	stopAI = false;
 
 	state->makeMove(bestMove);
 
-	printf("%+.1f\n", eval);
-
 	userInputMode = true;
 
-	// I bet this is going to cause problems
 	aiThreadRunning = false;
 }
 
@@ -145,7 +152,7 @@ int main(int argc, char** argv)
 				} else {
 					// second click
 
-					Piece promotion = Piece::DontCare;
+					Piece promotion = Piece::Queen;
 
 					std::vector<Move> moves = state.getLegalMoves();
 
@@ -185,6 +192,9 @@ int main(int argc, char** argv)
 			if (!aiThreadRunning) {
 				aiThreadRunning = true;
 				aiThread = new std::thread(aiThreadFunc, &state);
+
+				std::thread delayThread(aiDelayThread);
+				delayThread.detach();
 			}
 		}
 
@@ -239,7 +249,7 @@ int main(int argc, char** argv)
 			}
 		}
 
-		double trueEval = (double) overallEvaluation / 100.0;
+		double trueEval = (double) bestEvalThisIteration / 100.0;
 		double eval = trueEval;
 		if (eval < -600) eval = -25;
 		else if (eval < -23) eval = -23;

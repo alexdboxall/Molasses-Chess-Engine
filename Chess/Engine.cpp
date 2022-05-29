@@ -269,7 +269,7 @@ void GameState::makeMoveWithoutLegalityCheck(int sx, int sy, int dx, int dy, Pie
 
 	// handle pawn promotion
 	if (src.piece == Piece::Pawn && (dy == 0 || dy == 7)) {
-		dst.piece = promotionType;
+		board[dy][dx].piece = promotionType;
 	}
 
 	// prevent all castling if the king was moved

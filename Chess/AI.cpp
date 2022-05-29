@@ -2,8 +2,7 @@
 #include "AI.hpp"
 #include <cassert>
 #include <ctime>
-#include <map>
-#include <unordered_map>
+#include <algorithm>
 
 #include "Transposition.hpp"
 
@@ -173,8 +172,47 @@ bool minOrMax(Evaluation newValue, Evaluation currentBest, bool whiteTurn)
 
 TranspositionTable transpositionTable;
 
-Evaluation evaluatePositionNode(GameState state, int lookahead, int alpha, int beta)
+
+/* BEGIN DERIVATE CODE
+* 
+* The following code is heavy inspired by Sebastian Lague's Chess-AI
+* 
+* https://github.com/SebLague/Chess-AI
+* 
+
+MIT License
+
+Copyright (c) 2021 Sebastian Lague
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+
+Evaluation bestEvalThisIteration;
+Move bestMoveThisIteration;
+
+Evaluation evaluatePositionNode(GameState state, int lookahead, int alpha, int beta, int depth)
 {
+	if (stopAI) {
+		return alpha;
+	}
+
 	Hash hash = state.genZobristHash();
 
 	int realLookahead = lookahead;
@@ -183,43 +221,85 @@ Evaluation evaluatePositionNode(GameState state, int lookahead, int alpha, int b
 		TranspositionEntry transposition = transpositionTable.get(hash);
 
 		if (transposition.depth >= lookahead) {
-			++transpositionsUsed;
-			return transposition.evaluation;
+			if (transposition.type == (int) TranspositionType::Exact) {
+				++transpositionsUsed;
+				return transposition.evaluation;
+			
+			} else if (transposition.type == (int) TranspositionType::MaxBound && transposition.evaluation <= alpha) {
+				// the stored eval is 'beta', so we can abort searching if beta <= alpha
+				//printf("BETA transpos. used.\n");
+				++transpositionsUsed;
+				return transposition.evaluation;
+
+			} else if (transposition.type == (int) TranspositionType::MinBound && transposition.evaluation >= beta) {
+				// the stored eval is 'alpha', so we can abort searching if alpha >= beta
+				//printf("ALPHA transpos. used.\n");
+				++transpositionsUsed;
+				return transposition.evaluation;
+				
+			}
 		}
 	}
 
 	if (lookahead == 0) {
 		Evaluation eval = evaluatePosition(state);
-		transpositionTable.set(hash, eval, 0);
-		return eval;
+		//transpositionTable.set(hash, eval, 0, TranspositionType::Exact);
+		return state.whiteTurn ? eval : -eval;
 	}
 
+
 	auto moves = state.getLegalMoves();
+	/*if (moves.size() > 2) {
+		int partialSortLength = moves.size() > 4 ? 3 : 1;
+		std::partial_sort(moves.begin(), moves.begin() + 3, moves.end(),
+			[state, lookahead](Move& a, Move& b) { return abs(transpositionTable.getReorderingValue(a, state, 0)) > abs(transpositionTable.getReorderingValue(b, state, 0)); }
+		);
+	}*/
+
 	Evaluation bestEval = state.whiteTurn ? MAX_EVALUATION_BLACK : MAX_EVALUATION_WHITE;
+
+	TranspositionType transType = TranspositionType::MaxBound;
+	Move bestMoveHere;
+	bool foundAMove = false;
 
 	for (const Move& move : moves) {
 		GameState stateCopy = state;
 		stateCopy.makeMove(move);
 
-		Evaluation evaluation = evaluatePositionNode(stateCopy, lookahead - 1, alpha, beta);
-		if (minOrMax(evaluation, bestEval, state.whiteTurn)) {
-			bestEval = evaluation;
+		Evaluation evaluation = -evaluatePositionNode(stateCopy, lookahead - 1, -beta, -alpha, depth + 1);
+		
+		if (evaluation >= beta) {
+			transpositionTable.set(hash, beta, lookahead, TranspositionType::MinBound, move);
+			return beta;
 		}
 
-		if (state.whiteTurn && evaluation > alpha) alpha = evaluation;
-		if (!state.whiteTurn && evaluation < beta) beta = evaluation;
+		if (evaluation > alpha) {
+			transType = TranspositionType::Exact;
+			bestMoveHere = move;
+			foundAMove = true;
 
-		if (beta <= alpha) break;
+			alpha = evaluation;
+			if (depth == 0) {
+				bestMoveThisIteration = move;
+				bestEvalThisIteration = evaluation;
+			}
+		}
+
 	}
 
-	transpositionTable.set(hash, bestEval, realLookahead);
+	if (foundAMove) {
+		transpositionTable.set(hash, alpha, realLookahead, transType, bestMoveHere);
+	}
 
-	return bestEval;
+	return alpha;
 }
 
-Evaluation overallEvaluation = 0;
+bool stopAI = false;
 
-Move treeAI(GameState state, int lookahead) {
+Move treeAI(GameState state, int lookahead, bool firstOnMove) {
+	if (firstOnMove) {
+		transpositionTable.incrementMove();
+	}
 	time_t t = clock();
 
 	positionsEvaluated = 0;
@@ -227,38 +307,21 @@ Move treeAI(GameState state, int lookahead) {
 
 	auto moves = state.getLegalMoves();
 
-	Move bestMove = moves[0];
-	Evaluation bestEval = state.whiteTurn ? MAX_EVALUATION_BLACK : MAX_EVALUATION_WHITE;
+	bestMoveThisIteration = moves[0];
+	bestEvalThisIteration = evaluatePositionAfterMove(state, bestMoveThisIteration);
 
-	Evaluation alpha = MAX_EVALUATION_BLACK - 1000;
-	Evaluation beta  = MAX_EVALUATION_WHITE + 1000;
-
-	for (const Move& move : moves) {
-		GameState stateCopy = state;
-		stateCopy.makeMove(move);
-		Evaluation evaluation = evaluatePositionNode(stateCopy, lookahead, alpha, beta);
-
-		if (minOrMax(evaluation, bestEval, state.whiteTurn)) {
-			bestMove = move;
-			bestEval = evaluation;
-
-			if (lookahead >= 4) overallEvaluation = (bestEval + overallEvaluation) / 2;
-		}
-
-		if (state.whiteTurn  && evaluation > alpha) alpha = evaluation;
-		if (!state.whiteTurn && evaluation < beta ) beta  = evaluation;
-
-		if (beta <= alpha) break;
-	}
-				
-	if (lookahead >= 3) overallEvaluation = bestEval;
+	evaluatePositionNode(state, lookahead, MAX_EVALUATION_BLACK - 1000, MAX_EVALUATION_WHITE + 1000, 0);
 
 	time_t diff = clock() - t;
 	double secs = (double) diff / (double) CLOCKS_PER_SEC;
-	printf("Evaluated %d positions in %.1f secs. (%d saved by the table)\n", positionsEvaluated, secs, transpositionsUsed);
 	
-	return bestMove;
+	if (!stopAI) printf("Evaluated %d positions in %.1f secs. (%d saved by the table)\n", positionsEvaluated, secs, transpositionsUsed);
+	else printf("Timeout.\n");
+
+	return bestMoveThisIteration;
 }
+
+/* END DERIVATE CODE */
 
 Move greedyAI(GameState state)
 {

@@ -12,6 +12,7 @@ Evaluation evaluatePiece(int x, int y, Square square, int endgame);
 Evaluation evaluatePositionAfterMove(GameState state, Move move);
 
 Move greedyAI(GameState state);
-Move treeAI(GameState state, int depth);
+Move treeAI(GameState state, int depth, bool firstOnMove);
 
-extern Evaluation overallEvaluation;
+extern bool stopAI;
+extern Evaluation bestEvalThisIteration;
