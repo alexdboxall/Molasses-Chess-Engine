@@ -3,4 +3,4 @@ A chess engine and AI written in C++ and uses SDL2 for the interface. The AI use
 
 ![Chess](icons/documentation_img.png "Chess")
 
-The alpha-beta pruning code used in `AI.cpp` is based on Sebastian Lague's chess AI (https://github.com/SebLague/Chess-AI), under the MIT license (see `AI.hpp` for the full license.)
+The alpha-beta pruning logic used in `AI.cpp` is based on its implementation in Sebastian Lague's chess AI (https://github.com/SebLague/Chess-AI), under the MIT license (see `AI.hpp` for the full license.)
